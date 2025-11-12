@@ -1,4 +1,5 @@
-import { CheckCircle, AlertCircle, Download } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle, AlertCircle, Download, ChevronLeft, ChevronRight, Database } from 'lucide-react';
 import { ComparisonResult } from '../types';
 import { exportToCsv } from '../utils/fileParser';
 
@@ -7,16 +8,38 @@ interface ResultsDisplayProps {
 }
 
 export const ResultsDisplay = ({ results }: ResultsDisplayProps) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const totalPages = Math.ceil(results.missingUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = results.missingUsers.slice(startIndex, endIndex);
+
   const handleExport = () => {
     exportToCsv(results.missingUsers);
   };
 
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-          <div className="text-sm text-gray-600 mb-1">Total JSON Files</div>
-          <div className="text-3xl font-bold text-gray-900">{results.totalJsonFiles}</div>
+          <div className="text-sm text-gray-600 mb-1">Blob Count</div>
+          <div className="text-3xl font-bold text-gray-900">{results.csvCount || 0}</div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Total JSON Files</div>
+              <div className="text-3xl font-bold text-gray-900">{results.totalJsonFiles}</div>
+            </div>
+            <Database className="w-8 h-8 text-blue-500" />
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
@@ -58,10 +81,7 @@ export const ResultsDisplay = ({ results }: ResultsDisplayProps) => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    File Count
+                    Mismatch Details
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Files
@@ -69,18 +89,21 @@ export const ResultsDisplay = ({ results }: ResultsDisplayProps) => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {results.missingUsers.map((user, index) => (
+                {currentItems.map((user, index) => (
                   <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <AlertCircle className="w-4 h-4 text-red-500 mr-2" />
-                        <span className="text-sm font-medium text-gray-900">{user.currentUser}</span>
+                    <td className="px-6 py-4">
+                      <div className="flex items-start">
+                        <AlertCircle className="w-4 h-4 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="text-sm">
+                            <span className="font-semibold text-red-600">currentUser: </span>
+                            <span className="text-gray-900 bg-red-50 px-2 py-1 rounded">{user.currentUser}</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Found in {user.count} file{user.count !== 1 ? 's' : ''}
+                          </div>
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                        {user.count}
-                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-500 max-w-md">
@@ -92,6 +115,33 @@ export const ResultsDisplay = ({ results }: ResultsDisplayProps) => {
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {Math.min(endIndex, results.missingUsers.length)} of {results.missingUsers.length} entries
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -38,6 +38,7 @@ function App() {
         totalJsonFiles: jsonFiles.length,
         matchingUsers: matching,
         missingUsers,
+        csvCount: csvUsers.size,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during processing');

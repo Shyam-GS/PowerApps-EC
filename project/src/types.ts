@@ -8,4 +8,5 @@ export interface ComparisonResult {
   totalJsonFiles: number;
   matchingUsers: number;
   missingUsers: MissingUser[];
+  csvCount?: number;
 }
