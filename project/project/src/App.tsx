@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { Upload, FileText, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import FileUpload from './components/FileUpload';
 import ComparisonResults from './components/ComparisonResults';
+import Tabs from './components/Tabs';
+import UserComparison from './components/UserComparison';
 import { processComparison } from './utils/comparisonLogic';
 import type { ComparisonResult } from './types';
 
 function App() {
+  const [activeTab, setActiveTab] = useState<string>('excel');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [jsonFiles, setJsonFiles] = useState<File[]>([]);
   const [results, setResults] = useState<ComparisonResult | null>(null);
@@ -84,6 +87,11 @@ function App() {
     setError(null);
   };
 
+  const tabs = [
+    { id: 'excel', label: 'Excel CSV Comparison' },
+    { id: 'user', label: 'User Comparison' }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-8">
@@ -93,89 +101,103 @@ function App() {
               <FileText className="w-12 h-12 text-slate-700" />
             </div>
             <h1 className="text-4xl font-bold text-slate-800 mb-2">
-              CSV & JSON Comparison Tool
+              Comparison Tool
             </h1>
             <p className="text-slate-600">
-              Upload your CSV and JSON files to compare data and generate reports
+              Compare data using different methods
             </p>
           </div>
 
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-red-800 font-medium">Error</p>
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            </div>
-          )}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-          {!results ? (
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <FileUpload
-                  title="Upload CSV File"
-                  accept=".csv"
-                  icon={<FileText className="w-6 h-6" />}
-                  file={csvFile}
-                  onFileSelect={setCsvFile}
-                  description="Upload your CSV file containing the data"
-                />
-
-                <FileUpload
-                  title="Upload JSON Files"
-                  accept=".json,.zip"
-                  icon={<Upload className="w-6 h-6" />}
-                  files={jsonFiles}
-                  onFilesSelect={handleJsonFilesSelect}
-                  multiple
-                  description="Upload ZIP files or individual JSON files for comparison"
-                />
-              </div>
-
-              {(csvFile || jsonFiles.length > 0) && (
-                <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-                  <h3 className="font-semibold text-slate-700 mb-2">Selected Files:</h3>
-                  <div className="space-y-2 text-sm text-slate-600">
-                    {csvFile && (
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span>CSV: {csvFile.name}</span>
-                      </div>
-                    )}
-                    {jsonFiles.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span>JSON Files: {jsonFiles.length} file(s) selected</span>
-                      </div>
-                    )}
+            <div className="p-8">
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-red-800 font-medium">Error</p>
+                    <p className="text-red-600 text-sm">{error}</p>
                   </div>
                 </div>
               )}
 
-              <button
-                onClick={handleCompare}
-                disabled={!csvFile || jsonFiles.length === 0 || loading}
-                className="w-full bg-slate-700 text-white py-3 px-6 rounded-lg font-medium
-                         hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed
-                         transition-colors duration-200 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-5 h-5" />
-                    Compare & Generate Report
-                  </>
-                )}
-              </button>
+              {activeTab === 'excel' && (
+                <>
+                  {!results ? (
+                    <div>
+                      <div className="grid md:grid-cols-2 gap-6 mb-8">
+                        <FileUpload
+                          title="Upload CSV File"
+                          accept=".csv"
+                          icon={<FileText className="w-6 h-6" />}
+                          file={csvFile}
+                          onFileSelect={setCsvFile}
+                          description="Upload your CSV file containing the data"
+                        />
+
+                        <FileUpload
+                          title="Upload JSON Files"
+                          accept=".json,.zip"
+                          icon={<Upload className="w-6 h-6" />}
+                          files={jsonFiles}
+                          onFilesSelect={handleJsonFilesSelect}
+                          multiple
+                          description="Upload ZIP files or individual JSON files for comparison"
+                        />
+                      </div>
+
+                      {(csvFile || jsonFiles.length > 0) && (
+                        <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+                          <h3 className="font-semibold text-slate-700 mb-2">Selected Files:</h3>
+                          <div className="space-y-2 text-sm text-slate-600">
+                            {csvFile && (
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                                <span>CSV: {csvFile.name}</span>
+                              </div>
+                            )}
+                            {jsonFiles.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="w-4 h-4 text-green-600" />
+                                <span>JSON Files: {jsonFiles.length} file(s) selected</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleCompare}
+                        disabled={!csvFile || jsonFiles.length === 0 || loading}
+                        className="w-full bg-slate-700 text-white py-3 px-6 rounded-lg font-medium
+                                 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed
+                                 transition-colors duration-200 flex items-center justify-center gap-2"
+                      >
+                        {loading ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-5 h-5" />
+                            Compare & Generate Report
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <ComparisonResults results={results} onReset={handleReset} />
+                  )}
+                </>
+              )}
+
+              {activeTab === 'user' && (
+                <UserComparison />
+              )}
             </div>
-          ) : (
-            <ComparisonResults results={results} onReset={handleReset} />
-          )}
+          </div>
         </div>
       </div>
     </div>
